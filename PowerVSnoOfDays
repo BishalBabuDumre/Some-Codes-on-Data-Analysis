@@ -1,0 +1,53 @@
+import os
+import pandas as pd
+from pathlib import Path
+import matplotlib.pyplot as plt
+
+#Creating Bold Graph Edges and Fonts
+plt.rcParams["font.weight"] = "bold"
+plt.rcParams["axes.labelweight"] = "bold"
+plt.rcParams["axes.linewidth"] = 1.5
+plt.rcParams["axes.titleweight"] = "bold"
+plt.rcParams["axes.titlesize"] = 14
+
+#Figuring out date
+from datetime import date
+today = date.today()
+today = today.strftime("%m%d%Y")
+print("Today's date:", today)
+Date_Report_Generated = str(today)
+
+#Defining paths
+rootPath = os.path.join(Path.home(), "Bishal")
+cleanedFolder = os.path.join(rootPath, "Dumre", "Cleaned")
+filePath = os.path.join(cleanedFolder, "112_DoomRay_Solar_2.csv")
+os.makedirs(cleanedFolder, exist_ok=True)
+
+
+df = pd.read_csv(filePath)
+
+df["Si_ref_058_delta"] = (df["Irradiance_after_Irrad Si-Ref 058"]
+			- df["Irradiance_before_Irrad Si-Ref 058"])
+
+df = df.query("-3 < Si_ref_058_delta < 3")
+df = df.query("days_on_sun > 0")
+df["Irrad_Si_Ref_058"] = df["Irradiance_before_Irrad Si-Ref 058"]
+
+df1 = df.query('850 < Irrad_Si_Ref_058 < 950')
+df2 = df.query('500 < Irrad_Si_Ref_058 < 600')
+
+plt.figure()
+plt.scatter(df1['days_on_sun'], df1['PeakPower'], c = 'k', marker = 'o', s = 9, label = '(850-950)W/m$\mathregular{^2}$')
+plt.scatter(df2['days_on_sun'], df2['PeakPower'], c = 'b', marker = '+', s = 9, label = '(500-600)W/m$\mathregular{^2}$')
+
+plt.legend(loc='center', fontsize=8, frameon = False, columnspacing=1.25,handlelength=3, ncols = 1)
+plt.title('Power Evolution over Time', fontsize = 20, fontweight = "bold")
+plt.ylabel('Peak Power (Watt)', fontsize = 15)
+plt.xlabel('Number of Days', fontsize = 15)
+#plt.grid('on')
+plt.xticks(rotation='vertical', fontsize = 8)
+plt.tight_layout()
+plt.savefig('PowerVSdays.png')
+plt.close()
+
+    
